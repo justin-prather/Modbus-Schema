@@ -17,6 +17,7 @@ Device-agnostic Effect Schema generators for Modbus register values, with both E
 | Install | `bun install` |
 | Type-check | `bun run typecheck` |
 | Test | `bun test` |
+| Run example | `bun run examples/<name>.ts` |
 | Build | `bun run build` |
 
 No build step required for development — `noEmit` is on; Bun runs `.ts` directly.
@@ -29,7 +30,7 @@ src/
   index.ts                   — Schema engine: factories, config types, fromConfig, wire primitives
   engine.test.ts             — Unit tests for all factories and sync APIs
 examples/
-  basic.ts                   — Effect + synchronous API usage example
+  basic.ts                   — Effect + synchronous API usage
   branded-types.ts           — Domain brands with scaled/signed parameters
   from-config.ts             — Declarative ParamConfig dispatch via fromConfig
   bitfield-flags.ts          — Read-modify-write flag registers
