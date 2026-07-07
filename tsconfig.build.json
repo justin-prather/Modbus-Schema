@@ -1,4 +1,13 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "references", ".opencode", "dist", "examples"]
+  "exclude": [
+    "node_modules",
+    "references",
+    ".opencode",
+    "dist",
+    "examples",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/__tests__/**",
+  ]
 }

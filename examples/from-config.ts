@@ -39,13 +39,10 @@ const controlMode = {
     2: "Closed Loop Vector",
   } as const,
   meta: {
-    group: 0,
-    code: "00-00",
     name: "Control Mode Selection",
     range: "0-2",
     default: "0",
     unit: "-",
-    page: 1,
   },
 } satisfies EnumParamConfig;
 
@@ -55,13 +52,10 @@ const analogOutputScale = {
   factor: 0.01,
   domain: Voltage,
   meta: {
-    group: 0,
-    code: "00-01",
     name: "Analog Output 1 Scale",
     range: "0.00–10.00",
     default: "0.00",
     unit: "V",
-    page: 1,
   },
 } satisfies ScaledParamConfig<Voltage>;
 
@@ -70,21 +64,12 @@ const pulseInputBias = {
   kind: ParamKind.SignedScaled,
   factor: 0.1,
   meta: {
-    group: 0,
-    code: "00-02",
     name: "Pulse Input Bias",
     range: "–100.0–100.0",
     default: "0.0",
     unit: "%",
-    page: 1,
   },
 } satisfies SignedScaledParamConfig;
-
-const motorConfig = {
-  controlMode,
-  analogOutputScale,
-  pulseInputBias,
-};
 
 // ── Build entries from configs ─────────────────────────────────
 
@@ -99,7 +84,7 @@ const entries = {
 const snapshot: Record<number, number> = {
   [controlMode.register]: 2,
   [analogOutputScale.register]: 750,
-  [pulseInputBias.register]: -500,
+  [pulseInputBias.register]: 65036, // 0xFE0C = -50.0
 };
 
 console.log(

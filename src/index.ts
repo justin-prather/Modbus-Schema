@@ -75,8 +75,9 @@ const bit = (n: number): number => 1 << n;
 
 /**
  * Generic, device-agnostic register metadata used by the engine's description
- * annotations. Domain libraries extend this with device-specific fields
- * (e.g. {@link ParamMeta} adds `group`, `code`, `page`).
+ * annotations. Extend this interface to add device-specific fields; any extra
+ * keys not in {@link RegisterMeta} are rendered automatically in the schema
+ * description (e.g. `code: "00-41"` becomes a "Code: 00-41" line).
  */
 export interface RegisterMeta {
   readonly name: string;
@@ -86,69 +87,64 @@ export interface RegisterMeta {
   readonly description?: string;
 }
 
-/**
- * Device-flavored metadata extracted from the A510 instruction manual.
- */
-export interface ParamMeta extends RegisterMeta {
-  readonly group: number;
-  readonly code: string;
-  readonly page: number;
-}
+const REGISTER_META_KEYS = new Set([
+  "name", "unit", "range", "default", "description",
+]);
 
-const isParamMeta = (m: RegisterMeta): m is ParamMeta =>
-  "group" in m && "code" in m && "page" in m;
+const formatExtraLines = (meta: RegisterMeta): string[] => {
+  const lines: string[] = [];
+  for (const key of Object.keys(meta)) {
+    if (!REGISTER_META_KEYS.has(key)) {
+      const value = (meta as unknown as Record<string, unknown>)[key];
+      const label = key.charAt(0).toUpperCase() + key.slice(1);
+      lines.push(`${label}: ${value}`);
+    }
+  }
+  return lines;
+};
 
 const formatRegister = (register: number): string =>
   `0x${register.toString(16).toUpperCase().padStart(4, "0")}`;
 
-const formatMeta = (register: number, meta: RegisterMeta): string => {
-  const head = isParamMeta(meta) ? `${meta.code} ${meta.name}` : meta.name;
-  const lines = [
-    head,
+const formatMeta = (register: number, meta: RegisterMeta): string =>
+  [
+    meta.name,
     `Register: ${formatRegister(register)}`,
     `Setting Range: ${meta.range}`,
     `Default: ${meta.default}`,
     `Unit: ${meta.unit}`,
-  ];
-  if (isParamMeta(meta)) lines.push(`Manual Page: ${meta.page}`);
-  return lines.join("\n");
-};
+    ...formatExtraLines(meta),
+  ].join("\n");
 
 const formatScaledMeta = (
   register: number,
   meta: RegisterMeta,
   factor: number,
-): string => {
-  const head = isParamMeta(meta) ? `${meta.code} ${meta.name}` : meta.name;
-  const lines = [
-    head,
+): string =>
+  [
+    meta.name,
     `Register: ${formatRegister(register)}`,
     `Wire format: raw × ${factor}`,
     `Setting Range: ${meta.range}`,
     `Default: ${meta.default}`,
     `Unit: ${meta.unit}`,
-  ];
-  if (isParamMeta(meta)) lines.push(`Manual Page: ${meta.page}`);
-  return lines.join("\n");
-};
+    ...formatExtraLines(meta),
+  ].join("\n");
 
 const formatEnumMeta = (
   register: number,
   meta: RegisterMeta,
   labels: Record<number, string>,
-): string => {
-  const head = isParamMeta(meta) ? `${meta.code} ${meta.name}` : meta.name;
-  const lines = [
-    head,
+): string =>
+  [
+    meta.name,
     `Register: ${formatRegister(register)}`,
     `Options:`,
     ...Object.entries(labels).map(([k, v]) => `  ${k} = ${v}`),
     `Default: ${meta.default}`,
     `Unit: ${meta.unit}`,
-  ];
-  if (isParamMeta(meta)) lines.push(`Manual Page: ${meta.page}`);
-  return lines.join("\n");
-};
+    ...formatExtraLines(meta),
+  ].join("\n");
 
 const formatBitfieldMeta = (register: number, meta: RegisterMeta): string =>
   formatMeta(register, meta);
@@ -186,9 +182,7 @@ export enum ParamKind {
 // ── Config object types ──────────────────────────────────────
 
 /**
- * Generic base shared by all config variants. Device-flavored group files
- * use {@link ParamConfig} (whose `meta` is the stricter {@link ParamMeta});
- * command/monitor registers may use plain {@link RegisterMeta}.
+ * Base shared by all config variants.
  */
 export interface ConfigBase {
   readonly register: number;
@@ -196,28 +190,19 @@ export interface ConfigBase {
   readonly meta: RegisterMeta;
 }
 
-/**
- * Device-flavored base used by the group parameter configs ({@link ParamConfig}).
- */
-export interface ParamConfigBase {
-  readonly register: number;
-  readonly kind: ParamKind;
-  readonly meta: ParamMeta;
-}
-
-export interface UInt16ParamConfig extends ParamConfigBase {
+export interface UInt16ParamConfig extends ConfigBase {
   readonly kind: ParamKind.UInt16;
   readonly readOnly?: boolean;
 }
 
-export interface ScaledParamConfig<A = number> extends ParamConfigBase {
+export interface ScaledParamConfig<A = number> extends ConfigBase {
   readonly kind: ParamKind.Scaled;
   readonly factor: number;
   readonly domain?: Schema.Schema<A, any, any>;
   readonly readOnly?: boolean;
 }
 
-export interface SignedScaledParamConfig<A = number> extends ParamConfigBase {
+export interface SignedScaledParamConfig<A = number> extends ConfigBase {
   readonly kind: ParamKind.SignedScaled;
   readonly factor: number;
   readonly domain?: Schema.Schema<A, any, any>;
@@ -225,7 +210,7 @@ export interface SignedScaledParamConfig<A = number> extends ParamConfigBase {
 }
 
 export interface EnumParamConfig<Domain extends string = string>
-  extends ParamConfigBase {
+  extends ConfigBase {
   readonly kind: ParamKind.Enum;
   readonly labels: Record<number, Domain>;
   readonly readOnly?: boolean;

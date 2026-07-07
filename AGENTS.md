@@ -50,7 +50,7 @@ examples/
   - `formatted` — pretty-print helper
 - **`BitfieldParamEntry`** — Extends `ParamEntry` with a generated `Patch` class and `merge` function for read-modify-write semantics.
 - **`ParamConfig` / `ParamKind`** — Discriminated config objects consumed by `fromConfig`.
-- **`RegisterMeta` / `ParamMeta`** — Metadata used for description annotations. `ParamMeta` extends `RegisterMeta` with group/code/page fields for device parameter manuals.
+- **`RegisterMeta`** — Metadata used for description annotations. Extensible: any extra keys beyond `RegisterMeta`'s fields are rendered automatically in the schema description (see `formatExtraLines`).
 
 The engine is intentionally device-agnostic: it never imports domain brands, register enums, or device error types.
 

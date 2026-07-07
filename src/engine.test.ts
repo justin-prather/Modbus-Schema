@@ -29,12 +29,31 @@ const roundTrip = <A>(
   expect(encoded).toBe(wire);
 };
 
+const findDescription = (ast: unknown): string | undefined => {
+  if (!ast || typeof ast !== "object") return undefined;
+  const n = ast as Record<string, unknown>;
+  if (n.annotations) {
+    const ann = n.annotations as Record<symbol, unknown>;
+    const sym = Object.getOwnPropertySymbols(ann).find(
+      (s) => s.description?.includes("Description"),
+    );
+    if (sym) return String(ann[sym]);
+  }
+  for (const val of Object.values(n)) {
+    if (val && typeof val === "object") {
+      const found = findDescription(val);
+      if (found) return found;
+    }
+  }
+  return undefined;
+};
+
 // ── UInt16 param ───────────────────────────────────────────────
 
 describe("UInt16Param", () => {
-  const meta: P.ParamMeta = {
-    group: 0, code: "00-41", name: "User Parameter 0",
-    range: "00-01~22-31", default: "00-41", unit: "-", page: 421,
+  const meta: P.RegisterMeta = {
+    name: "User Parameter 0",
+    range: "00-01~22-31", default: "00-41", unit: "-",
   };
 
   const config: P.UInt16ParamConfig = {
@@ -94,9 +113,9 @@ describe("UInt16Param", () => {
 // ── Scaled param ───────────────────────────────────────────────
 
 describe("ScaledParam", () => {
-  const meta: P.ParamMeta = {
-    group: 1, code: "01-02", name: "Maximum Output Frequency of Motor 1",
-    range: "4.8~599.0", default: "50.0/60.0", unit: "Hz", page: 422,
+  const meta: P.RegisterMeta = {
+    name: "Maximum Output Frequency of Motor 1",
+    range: "4.8~599.0", default: "50.0/60.0", unit: "Hz",
   };
 
   const config: P.ScaledParamConfig = {
@@ -137,9 +156,9 @@ describe("ScaledParam", () => {
 // ── SignedScaled param ─────────────────────────────────────────
 
 describe("SignedScaledParam", () => {
-  const meta: P.ParamMeta = {
-    group: 3, code: "03-33", name: "Pulse Input Bias",
-    range: "-100.0~100.0", default: "0.0", unit: "%", page: 431,
+  const meta: P.RegisterMeta = {
+    name: "Pulse Input Bias",
+    range: "-100.0~100.0", default: "0.0", unit: "%",
   };
 
   const config: P.SignedScaledParamConfig = {
@@ -185,9 +204,9 @@ describe("SignedScaledParam", () => {
 // ── Enum param ─────────────────────────────────────────────────
 
 describe("EnumParam", () => {
-  const meta: P.ParamMeta = {
-    group: 0, code: "00-00", name: "Control Mode Selection",
-    range: "0-6", default: "0", unit: "-", page: 419,
+  const meta: P.RegisterMeta = {
+    name: "Control Mode Selection",
+    range: "0-6", default: "0", unit: "-",
   };
 
   const config: P.EnumParamConfig<"V/F" | "V/F+PG" | "SLV" | "SV" | "PMSV" | "PMSLV" | "SLV2"> = {
@@ -330,7 +349,7 @@ describe("fromConfig", () => {
   it("returns entry with schema, decode, encode, formatted, decodeSync, encodeSync", () => {
     const entry = P.fromConfig({
       register: 0, kind: P.ParamKind.UInt16,
-      meta: { group: 0, code: "test", name: "Test", range: "-", default: "-", unit: "-", page: 0 },
+      meta: { name: "Test", range: "-", default: "-", unit: "-" },
     });
     expect(entry).toHaveProperty("schema");
     expect(entry).toHaveProperty("decode");
@@ -338,6 +357,88 @@ describe("fromConfig", () => {
     expect(entry).toHaveProperty("formatted");
     expect(entry).toHaveProperty("decodeSync");
     expect(entry).toHaveProperty("encodeSync");
+  });
+});
+
+// ── Extended metadata ──────────────────────────────────────────
+
+describe("extended metadata", () => {
+  it("renders extra RegisterMeta keys in the schema description", () => {
+    const extended = {
+      name: "PID Gain",
+      range: "0–100",
+      default: "1",
+      unit: "%",
+      code: "03-47",
+      group: 3,
+      page: 431,
+    };
+
+    const entry = P.makeScaledParam(0x0347, 0.01, extended);
+
+    const desc = findDescription(entry.schema.ast);
+    expect(desc).toContain("Code: 03-47");
+    expect(desc).toContain("Group: 3");
+    expect(desc).toContain("Page: 431");
+    expect(desc).not.toContain("Description:"); // description is in REGISTER_META_KEYS
+  });
+
+  it("works with all factory types (UInt16, Enum, Lookup)", () => {
+    const meta = {
+      name: "Test",
+      range: "0-1",
+      default: "0",
+      unit: "-",
+      serial: "A100",
+    };
+
+    const uint16 = P.makeParam(0x1000, meta);
+    const desc1 = findDescription(uint16.schema.ast);
+    expect(desc1).toContain("Serial: A100");
+
+    const enumEntry = P.makeEnumParam(0x1001, { 0: "Off", 1: "On" }, meta);
+    const desc2 = findDescription(enumEntry.schema.ast);
+    expect(desc2).toContain("Serial: A100");
+
+    const lookupEntry = P.makeLookupParam(
+      0x1002, { 1: "FaultA" }, (r) => `Unknown(${r})`, meta,
+    );
+    const desc3 = findDescription(lookupEntry.schema.ast);
+    expect(desc3).toContain("Serial: A100");
+  });
+
+  it("works with fromConfig", () => {
+    const meta = {
+      name: "Config Test",
+      range: "0-255",
+      default: "0",
+      unit: "-",
+      vendorId: "0xACME",
+    };
+
+    const entry = P.fromConfig({
+      register: 0x2000,
+      kind: P.ParamKind.UInt16,
+      meta,
+    });
+
+    const desc = findDescription((entry as any).schema.ast);
+    expect(desc).toContain("VendorId: 0xACME");
+  });
+
+  it("includes extra fields in description of readOnly params", () => {
+    const meta = {
+      name: "Monitor Register",
+      range: "0-1",
+      default: "0",
+      unit: "-",
+      alarm: "Overheat",
+    };
+
+    const entry = P.makeScaledParam(0x3000, 1, meta, { readOnly: true });
+
+    const desc = findDescription(entry.schema.ast);
+    expect(desc).toContain("Alarm: Overheat");
   });
 });
 

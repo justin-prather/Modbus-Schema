@@ -4,52 +4,54 @@ var UInt16 = Schema.Number.pipe(Schema.int(), Schema.nonNegative(), Schema.lessT
 var Int16 = Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(-32768), Schema.lessThanOrEqualTo(32767), Schema.brand("Int16"));
 var readOnlyEncodeFailure = (registerName, actual, ast) => Effect.fail(new ParseResult.Type(ast, actual, `${registerName} is read only`));
 var bit = (n) => 1 << n;
-var isParamMeta = (m) => ("group" in m) && ("code" in m) && ("page" in m);
+var REGISTER_META_KEYS = new Set([
+  "name",
+  "unit",
+  "range",
+  "default",
+  "description"
+]);
+var formatExtraLines = (meta) => {
+  const lines = [];
+  for (const key of Object.keys(meta)) {
+    if (!REGISTER_META_KEYS.has(key)) {
+      const value = meta[key];
+      const label = key.charAt(0).toUpperCase() + key.slice(1);
+      lines.push(`${label}: ${value}`);
+    }
+  }
+  return lines;
+};
 var formatRegister = (register) => `0x${register.toString(16).toUpperCase().padStart(4, "0")}`;
-var formatMeta = (register, meta) => {
-  const head = isParamMeta(meta) ? `${meta.code} ${meta.name}` : meta.name;
-  const lines = [
-    head,
-    `Register: ${formatRegister(register)}`,
-    `Setting Range: ${meta.range}`,
-    `Default: ${meta.default}`,
-    `Unit: ${meta.unit}`
-  ];
-  if (isParamMeta(meta))
-    lines.push(`Manual Page: ${meta.page}`);
-  return lines.join(`
+var formatMeta = (register, meta) => [
+  meta.name,
+  `Register: ${formatRegister(register)}`,
+  `Setting Range: ${meta.range}`,
+  `Default: ${meta.default}`,
+  `Unit: ${meta.unit}`,
+  ...formatExtraLines(meta)
+].join(`
 `);
-};
-var formatScaledMeta = (register, meta, factor) => {
-  const head = isParamMeta(meta) ? `${meta.code} ${meta.name}` : meta.name;
-  const lines = [
-    head,
-    `Register: ${formatRegister(register)}`,
-    `Wire format: raw × ${factor}`,
-    `Setting Range: ${meta.range}`,
-    `Default: ${meta.default}`,
-    `Unit: ${meta.unit}`
-  ];
-  if (isParamMeta(meta))
-    lines.push(`Manual Page: ${meta.page}`);
-  return lines.join(`
+var formatScaledMeta = (register, meta, factor) => [
+  meta.name,
+  `Register: ${formatRegister(register)}`,
+  `Wire format: raw × ${factor}`,
+  `Setting Range: ${meta.range}`,
+  `Default: ${meta.default}`,
+  `Unit: ${meta.unit}`,
+  ...formatExtraLines(meta)
+].join(`
 `);
-};
-var formatEnumMeta = (register, meta, labels) => {
-  const head = isParamMeta(meta) ? `${meta.code} ${meta.name}` : meta.name;
-  const lines = [
-    head,
-    `Register: ${formatRegister(register)}`,
-    `Options:`,
-    ...Object.entries(labels).map(([k, v]) => `  ${k} = ${v}`),
-    `Default: ${meta.default}`,
-    `Unit: ${meta.unit}`
-  ];
-  if (isParamMeta(meta))
-    lines.push(`Manual Page: ${meta.page}`);
-  return lines.join(`
+var formatEnumMeta = (register, meta, labels) => [
+  meta.name,
+  `Register: ${formatRegister(register)}`,
+  `Options:`,
+  ...Object.entries(labels).map(([k, v]) => `  ${k} = ${v}`),
+  `Default: ${meta.default}`,
+  `Unit: ${meta.unit}`,
+  ...formatExtraLines(meta)
+].join(`
 `);
-};
 var formatBitfieldMeta = (register, meta) => formatMeta(register, meta);
 var formatLookupMeta = (register, meta) => formatMeta(register, meta);
 var makeEntry = (schema) => ({

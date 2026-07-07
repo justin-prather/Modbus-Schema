@@ -43,8 +43,9 @@ export declare const Int16: Schema.brand<Schema.filter<Schema.filter<Schema.filt
 export declare const readOnlyEncodeFailure: (registerName: string, actual: unknown, ast: ConstructorParameters<typeof ParseResult.Type>[0]) => Effect.Effect<never, ParseResult.Type, never>;
 /**
  * Generic, device-agnostic register metadata used by the engine's description
- * annotations. Domain libraries extend this with device-specific fields
- * (e.g. {@link ParamMeta} adds `group`, `code`, `page`).
+ * annotations. Extend this interface to add device-specific fields; any extra
+ * keys not in {@link RegisterMeta} are rendered automatically in the schema
+ * description (e.g. `code: "00-41"` becomes a "Code: 00-41" line).
  */
 export interface RegisterMeta {
     readonly name: string;
@@ -52,14 +53,6 @@ export interface RegisterMeta {
     readonly range: string;
     readonly default: string;
     readonly description?: string;
-}
-/**
- * Device-flavored metadata extracted from the A510 instruction manual.
- */
-export interface ParamMeta extends RegisterMeta {
-    readonly group: number;
-    readonly code: string;
-    readonly page: number;
 }
 /**
  * Identifies which schema factory created/would create the ParamEntry.
@@ -73,40 +66,30 @@ export declare enum ParamKind {
     Lookup = "Lookup"
 }
 /**
- * Generic base shared by all config variants. Device-flavored group files
- * use {@link ParamConfig} (whose `meta` is the stricter {@link ParamMeta});
- * command/monitor registers may use plain {@link RegisterMeta}.
+ * Base shared by all config variants.
  */
 export interface ConfigBase {
     readonly register: number;
     readonly kind: ParamKind;
     readonly meta: RegisterMeta;
 }
-/**
- * Device-flavored base used by the group parameter configs ({@link ParamConfig}).
- */
-export interface ParamConfigBase {
-    readonly register: number;
-    readonly kind: ParamKind;
-    readonly meta: ParamMeta;
-}
-export interface UInt16ParamConfig extends ParamConfigBase {
+export interface UInt16ParamConfig extends ConfigBase {
     readonly kind: ParamKind.UInt16;
     readonly readOnly?: boolean;
 }
-export interface ScaledParamConfig<A = number> extends ParamConfigBase {
+export interface ScaledParamConfig<A = number> extends ConfigBase {
     readonly kind: ParamKind.Scaled;
     readonly factor: number;
     readonly domain?: Schema.Schema<A, any, any>;
     readonly readOnly?: boolean;
 }
-export interface SignedScaledParamConfig<A = number> extends ParamConfigBase {
+export interface SignedScaledParamConfig<A = number> extends ConfigBase {
     readonly kind: ParamKind.SignedScaled;
     readonly factor: number;
     readonly domain?: Schema.Schema<A, any, any>;
     readonly readOnly?: boolean;
 }
-export interface EnumParamConfig<Domain extends string = string> extends ParamConfigBase {
+export interface EnumParamConfig<Domain extends string = string> extends ConfigBase {
     readonly kind: ParamKind.Enum;
     readonly labels: Record<number, Domain>;
     readonly readOnly?: boolean;
