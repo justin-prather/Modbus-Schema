@@ -12,6 +12,7 @@ import { Schema } from "effect";
 import {
   ParamKind,
   type ParamConfig,
+  type RegisterMeta,
   type ScaledParamConfig,
   type SignedScaledParamConfig,
   type EnumParamConfig,
@@ -57,7 +58,7 @@ const analogOutputScale = {
     default: "0.00",
     unit: "V",
   },
-} satisfies ScaledParamConfig<Voltage>;
+} satisfies ScaledParamConfig<RegisterMeta, Voltage>;
 
 const pulseInputBias = {
   register: 0x0002,
