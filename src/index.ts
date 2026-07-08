@@ -82,8 +82,8 @@ const bit = (n: number): number => 1 << n;
 export interface RegisterMeta {
   readonly name: string;
   readonly unit: string;
-  readonly range: string;
-  readonly default: string;
+  readonly range?: string;
+  readonly default?: string;
   readonly description?: string;
 }
 
@@ -194,56 +194,68 @@ export interface ConfigBase<R extends RegisterMeta = RegisterMeta> {
   readonly meta: R;
 }
 
-export interface UInt16ParamConfig extends ConfigBase {
+export interface UInt16ParamConfig<R extends RegisterMeta = RegisterMeta>
+  extends ConfigBase<R> {
   readonly kind: ParamKind.UInt16;
   readonly readOnly?: boolean;
 }
 
-export interface ScaledParamConfig<A = number> extends ConfigBase {
+export interface ScaledParamConfig<
+  R extends RegisterMeta = RegisterMeta,
+  A = number,
+> extends ConfigBase<R> {
   readonly kind: ParamKind.Scaled;
   readonly factor: number;
   readonly domain?: Schema.Schema<A, any, any>;
   readonly readOnly?: boolean;
 }
 
-export interface SignedScaledParamConfig<A = number> extends ConfigBase {
+export interface SignedScaledParamConfig<
+  R extends RegisterMeta = RegisterMeta,
+  A = number,
+> extends ConfigBase<R> {
   readonly kind: ParamKind.SignedScaled;
   readonly factor: number;
   readonly domain?: Schema.Schema<A, any, any>;
   readonly readOnly?: boolean;
 }
 
-export interface EnumParamConfig<Domain extends string = string>
-  extends ConfigBase {
+export interface EnumParamConfig<
+  R extends RegisterMeta = RegisterMeta,
+  Domain extends string = string,
+> extends ConfigBase<R> {
   readonly kind: ParamKind.Enum;
   readonly labels: Record<number, Domain>;
   readonly readOnly?: boolean;
 }
 
 export interface BitfieldParamConfig<
+  R extends RegisterMeta = RegisterMeta,
   F extends AnyBitfieldClass = AnyBitfieldClass,
-> extends ConfigBase {
+> extends ConfigBase<R> {
   readonly kind: ParamKind.Bitfield;
   readonly flagsClass: F;
   readonly bitLayout: Record<keyof InstanceType<F>, number>;
   readonly readOnly?: boolean;
 }
 
-export interface LookupParamConfig<Domain extends string = string>
-  extends ConfigBase {
+export interface LookupParamConfig<
+  R extends RegisterMeta = RegisterMeta,
+  Domain extends string = string,
+> extends ConfigBase<R> {
   readonly kind: ParamKind.Lookup;
   readonly labels: Record<number, Domain>;
   readonly fallback: (raw: number) => Domain;
   readonly domain?: Schema.Schema<Domain, any, any>;
 }
 
-export type ParamConfig =
-  | UInt16ParamConfig
-  | ScaledParamConfig<any>
-  | SignedScaledParamConfig<any>
-  | EnumParamConfig<any>
-  | BitfieldParamConfig<any>
-  | LookupParamConfig<any>;
+export type ParamConfig<R extends RegisterMeta = RegisterMeta> =
+  | UInt16ParamConfig<R>
+  | ScaledParamConfig<R, any>
+  | SignedScaledParamConfig<R, any>
+  | EnumParamConfig<R, any>
+  | BitfieldParamConfig<R, any>
+  | LookupParamConfig<R, any>;
 
 // ── Bundle entry type ───────────────────────────────────────
 

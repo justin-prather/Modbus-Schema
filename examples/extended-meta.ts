@@ -13,7 +13,7 @@ import {
   type RegisterMeta,
   makeScaledParam,
   fromConfig,
-  type ScaledParamConfig,
+  type ParamConfig,
 } from "../index";
 
 // ── Extended metadata ─────────────────────────────────────────
@@ -36,7 +36,7 @@ const meta: DeviceMeta = {
   page: 431,
 };
 
-const device: ScaledParamConfig = {
+const device: ParamConfig = {
   register: 0x0347,
   factor: 0.01,
   meta,
