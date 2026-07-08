@@ -68,10 +68,10 @@ export declare enum ParamKind {
 /**
  * Base shared by all config variants.
  */
-export interface ConfigBase {
+export interface ConfigBase<R extends RegisterMeta = RegisterMeta> {
     readonly register: number;
     readonly kind: ParamKind;
-    readonly meta: RegisterMeta;
+    readonly meta: R;
 }
 export interface UInt16ParamConfig extends ConfigBase {
     readonly kind: ParamKind.UInt16;
