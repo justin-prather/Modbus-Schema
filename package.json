@@ -2,15 +2,28 @@
   "name": "modbus-schema",
   "version": "0.1.0",
   "description": "Device-agnostic Effect Schema generators for Modbus register values, with both Effect-native and synchronous APIs.",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "type": "module",
-  "exports": {
-    ".": {
-      "import": {
+  "files": [
+    "src/**/*.ts",
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "exports": {
+      "./package.json": "./package.json",
+      ".": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
       }
+    }
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.js"
     }
   },
   "scripts": {
