@@ -13,6 +13,7 @@ import {
   type RegisterMeta,
   makeScaledParam,
   fromConfig,
+  type ScaledParamConfig,
 } from "../index";
 
 // ── Extended metadata ─────────────────────────────────────────
@@ -35,7 +36,14 @@ const meta: DeviceMeta = {
   page: 431,
 };
 
-const pidGain = makeScaledParam(0x0347, 0.01, meta);
+const device: ScaledParamConfig = {
+  register: 0x0347,
+  factor: 0.01,
+  meta,
+  kind: ParamKind.Scaled,
+};
+
+const pidGain = makeScaledParam(device.register, device.factor, device.meta);
 
 console.log("Decoded value:", pidGain.decodeSync(5000)); // 50
 console.log("Encoded wire:", pidGain.encodeSync(75.25)); // 7525

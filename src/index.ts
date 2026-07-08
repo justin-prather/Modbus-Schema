@@ -88,7 +88,11 @@ export interface RegisterMeta {
 }
 
 const REGISTER_META_KEYS = new Set([
-  "name", "unit", "range", "default", "description",
+  "name",
+  "unit",
+  "range",
+  "default",
+  "description",
 ]);
 
 const formatExtraLines = (meta: RegisterMeta): string[] => {
@@ -184,10 +188,10 @@ export enum ParamKind {
 /**
  * Base shared by all config variants.
  */
-export interface ConfigBase {
+export interface ConfigBase<R extends RegisterMeta = RegisterMeta> {
   readonly register: number;
   readonly kind: ParamKind;
-  readonly meta: RegisterMeta;
+  readonly meta: R;
 }
 
 export interface UInt16ParamConfig extends ConfigBase {
@@ -248,8 +252,12 @@ type SchemaEncoded<S> = S extends Schema.Schema<any, infer I, any> ? I : never;
 
 export type ParamEntry<S extends Schema.Schema<any, any>> = {
   readonly schema: S;
-  readonly decode: (raw: unknown) => Effect.Effect<SchemaType<S>, ParseResult.ParseError, never>;
-  readonly encode: (value: SchemaType<S>) => Effect.Effect<SchemaEncoded<S>, ParseResult.ParseError, never>;
+  readonly decode: (
+    raw: unknown,
+  ) => Effect.Effect<SchemaType<S>, ParseResult.ParseError, never>;
+  readonly encode: (
+    value: SchemaType<S>,
+  ) => Effect.Effect<SchemaEncoded<S>, ParseResult.ParseError, never>;
   readonly formatted: (value: SchemaType<S>) => string;
   readonly decodeSync: (raw: unknown) => SchemaType<S>;
   readonly encodeSync: (value: SchemaType<S>) => SchemaEncoded<S>;
@@ -571,7 +579,8 @@ export const makeLookupParam = <Domain extends string>(
   const schema = UInt16.pipe(
     Schema.annotations({ description: formatLookupMeta(register, meta) }),
     Schema.transformOrFail(domain, {
-      decode: (raw: number) => ParseResult.succeed(labels[raw] ?? fallback(raw)),
+      decode: (raw: number) =>
+        ParseResult.succeed(labels[raw] ?? fallback(raw)),
       encode: (value: Domain, _, ast) =>
         readOnlyEncodeFailure(meta.name, value, ast),
       strict: false,
