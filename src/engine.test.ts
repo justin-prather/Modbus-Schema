@@ -209,7 +209,10 @@ describe("EnumParam", () => {
     range: "0-6", default: "0", unit: "-",
   };
 
-  const config: P.EnumParamConfig<"V/F" | "V/F+PG" | "SLV" | "SV" | "PMSV" | "PMSLV" | "SLV2"> = {
+  const config: P.EnumParamConfig<
+    P.RegisterMeta,
+    "V/F" | "V/F+PG" | "SLV" | "SV" | "PMSV" | "PMSLV" | "SLV2"
+  > = {
     register: 0x0000, kind: P.ParamKind.Enum,
     labels: { 0: "V/F", 1: "V/F+PG", 2: "SLV", 3: "SV", 4: "PMSV", 5: "PMSLV", 6: "SLV2" } as const,
     meta,

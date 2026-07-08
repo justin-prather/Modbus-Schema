@@ -276,15 +276,15 @@ export type ParamEntry<S extends Schema.Schema<any, any>> = {
 };
 
 export type ParamEntryOfConfig<C extends ParamConfig> =
-  C extends ScaledParamConfig<infer A>
+  C extends ScaledParamConfig<any, infer A>
     ? ParamEntry<Schema.Schema<A, number>>
-    : C extends SignedScaledParamConfig<infer A>
+    : C extends SignedScaledParamConfig<any, infer A>
       ? ParamEntry<Schema.Schema<A, number>>
-      : C extends EnumParamConfig<infer Domain>
+      : C extends EnumParamConfig<any, infer Domain>
         ? ParamEntry<Schema.Schema<Domain, number>>
-        : C extends BitfieldParamConfig<infer F>
-          ? BitfieldParamEntry<F>
-          : C extends LookupParamConfig<infer Domain>
+        : C extends BitfieldParamConfig<any, infer F>
+          ? BitfieldParamEntry<F & AnyBitfieldClass>
+          : C extends LookupParamConfig<any, infer Domain>
             ? ParamEntry<Schema.Schema<Domain, number>>
             : ParamEntry<Schema.Schema<number, number>>;
 
