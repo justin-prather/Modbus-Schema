@@ -23,7 +23,7 @@
     "./package.json": "./package.json",
     ".": {
       "types": "./src/index.ts",
-      "default": "./src/index.js"
+      "default": "./src/index.ts"
     }
   },
   "scripts": {
