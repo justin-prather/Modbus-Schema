@@ -1,0 +1,11 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["index.ts"],
+  "tsconfig": "./tsconfig.json",
+  "out": "docs-site",
+  "name": "modbus-schema",
+  "readme": "README.md",
+  "cleanOutputDir": true,
+  "excludePrivate": true,
+  "excludeInternal": true
+}

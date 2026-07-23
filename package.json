@@ -30,13 +30,15 @@
     "test": "bun test src/",
     "test:coverage": "bun test --coverage src/",
     "typecheck": "tsc --noEmit",
-    "build": "rm -rf ./dist && bun build ./index.ts --outdir ./dist --target node --external effect && tsc --noEmit false --emitDeclarationOnly --outDir ./dist --rootDir . --project tsconfig.build.json"
+    "build": "rm -rf ./dist && bun build ./index.ts --outdir ./dist --target node --external effect && tsc --noEmit false --emitDeclarationOnly --outDir ./dist --rootDir . --project tsconfig.build.json",
+    "docs": "typedoc"
   },
   "devDependencies": {
     "@effect/language-service": "^0.86.3",
     "@types/bun": "latest",
     "effect": "^3.21.4",
     "fallow": "^2.104.0",
+    "typedoc": "^0.28.20",
     "typescript": "^6.0.3"
   },
   "peerDependencies": {
